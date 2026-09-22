@@ -1,6 +1,6 @@
 //
 //  AuthStatus.swift
-//  SwiftUIDemo
+//  BootcampCapstone
 //
 //  Created by Solomon Chambers on 9/17/26.
 //
