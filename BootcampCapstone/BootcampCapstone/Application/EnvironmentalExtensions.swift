@@ -14,4 +14,9 @@ extension EnvironmentValues {
         set { self[EmployeeRepositoryKey.self] = newValue }
     }
     
+    var productRepository: any RepositoryProtocol<Product> {
+        get { self[ProductRepositoryKey.self] }
+        set { self[ProductRepositoryKey.self] = newValue }
+    }
+    
 }
