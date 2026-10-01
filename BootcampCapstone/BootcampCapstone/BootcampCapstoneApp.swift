@@ -2,21 +2,22 @@
 //  BootcampCapstoneApp.swift
 //  BootcampCapstone
 //
-//  Created by user301385 on 9/17/26.
+//  Created by Solomon Chambers on 9/17/26.
 //
 
 import SwiftUI
+internal import CoreData
 
 @main
 struct SwiftUIDemoApp: App {
-    let kazooAPIURL = "https://kazoopromotions.com/api"
+    let awAPIURL = "https://api.bootcampcentral.com/api"
     @StateObject var authStatus = AuthStatus()
     
     var body: some Scene {
         WindowGroup {
             if authStatus.isLoggedIn {
                 ContentView()
-                // configure custom dependency injection
+                .environment(\.employeeRepository, RemoteEmployeeRepo(urlBase: awAPIURL, authStatus: authStatus))
                 .environmentObject(authStatus)
             } else {
                 LoginView()
