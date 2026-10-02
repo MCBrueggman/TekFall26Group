@@ -9,12 +9,14 @@ import SwiftUI
 
 enum ListType: String, CaseIterable {
     case employees = "Employees"
+    case products = "Products"
 }
 
 struct ContentView: View {
     @State private var current: String = ""
 
     @Environment(\.employeeRepository) private var employeeRepository
+    @Environment(\.productRepository) private var productRepository
     @EnvironmentObject var authStatus: AuthStatus
    
     var body: some View {
@@ -22,6 +24,7 @@ struct ContentView: View {
             VStack {
                 switch current {
                 case "employees": EmployeeList(repository: employeeRepository)
+                case "products": ProductCatalog(repository: productRepository)
                     default: HomeView()
                 }
             }
@@ -29,6 +32,8 @@ struct ContentView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button("Employee Info") { current = "employees"}
+                        Divider()
+                        Button("Products") { current = "products"}
                         Divider()
                         Button("Logout") { authStatus.updateLoginStatus(success: false)}
                     }

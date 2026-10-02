@@ -11,3 +11,7 @@ struct EmployeeRepositoryKey: EnvironmentKey {
     static let defaultValue: any RepositoryProtocol<Employee> = MockEmployeeRepo()
 }
 
+struct ProductRepositoryKey: EnvironmentKey {
+    static let defaultValue: any RepositoryProtocol<Product> = MockProductRepo()
+}
+

@@ -18,6 +18,7 @@ struct SwiftUIDemoApp: App {
             if authStatus.isLoggedIn {
                 ContentView()
                 .environment(\.employeeRepository, RemoteEmployeeRepo(urlBase: awAPIURL, authStatus: authStatus))
+                .environment(\.productRepository, RemoteProductRepo(urlBase: awAPIURL, authStatus: authStatus))
                 .environmentObject(authStatus)
             } else {
                 LoginView()
