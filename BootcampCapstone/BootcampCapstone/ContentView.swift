@@ -10,6 +10,7 @@ import SwiftUI
 enum ListType: String, CaseIterable {
     case employees = "Employees"
     case dashboard = "Dashboard"
+    case products = "Products"
 }
 
 struct ContentView: View {
@@ -20,6 +21,8 @@ struct ContentView: View {
     @Environment(\.bestWorstRepository) private var bestWorstRepository
     @Environment(\.lowStockRepository) private var lowStockRepository
     @Environment(\.dashboardShiftRepository) private var dashboardShiftRepository
+    @Environment(\.productRepository) private var productRepository
+    @Environment(\.orderRepository) private var orderRepository
     @EnvironmentObject var authStatus: AuthStatus
    
     var body: some View {
@@ -32,6 +35,8 @@ struct ContentView: View {
                                         lowStockRepository: lowStockRepository,
                                         dashboardShiftRepository: dashboardShiftRepository
                 )
+                case "products": ProductCatalog(repository: productRepository)
+                case "orders": OrderView(repository: orderRepository, productRepo: productRepository)
                     default: HomeView()
                 }
             }
@@ -39,6 +44,8 @@ struct ContentView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button("Employee Info") { current = "employees"}
+                        Button("Products") { current = "products"}
+                        Button("Orders") {current = "orders"}
                         Divider()
                         Button("Dasboard") { current = "dashboard"}
                         Divider()

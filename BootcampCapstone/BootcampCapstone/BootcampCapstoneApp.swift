@@ -46,6 +46,8 @@ struct SwiftUIDemoApp: App {
                                     authStatus: authStatus
                                 )
                             )
+                .environment(\.productRepository, RemoteProductRepo(urlBase: awAPIURL, authStatus: authStatus))
+                .environment(\.orderRepository, RemoteOrderRepo(urlBase: awAPIURL, authStatus: authStatus))
                 .environmentObject(authStatus)
             } else {
                 LoginView()

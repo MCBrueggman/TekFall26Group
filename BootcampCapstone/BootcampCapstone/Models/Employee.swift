@@ -30,7 +30,7 @@ class Employee: Identifiable, Hashable, Codable {
     init(id: Int, firstName: String, middleName: String? = nil, lastName: String,
          suffix: String? = nil, title: String, jobTitle: String,
     shift: String? = nil, department: String? = nil, hireDate: Date? = nil, shiftHistory: [ShiftHistory]? = nil) {
-        self.id = id
+        self.id             = id
         self.firstName      = firstName
         self.middleName     = middleName
         self.lastName       = lastName

@@ -2,7 +2,7 @@
 //  EnvironmentalExtensions.swift
 //  BootcampCapstone
 //
-//  Created by user301385 on 9/21/26.
+//  Created by Solomon Chambers on 9/21/26.
 //
 
 import SwiftUI
@@ -13,6 +13,7 @@ extension EnvironmentValues {
         get { self[EmployeeRepositoryKey.self] }
         set { self[EmployeeRepositoryKey.self] = newValue }
     }
+
     var weeklySalesRepository: any RepositoryProtocol<WeeklySales> {
         get { self[WeeklySalesRepositoryKey.self] }
         set { self[WeeklySalesRepositoryKey.self] = newValue }
@@ -31,5 +32,15 @@ extension EnvironmentValues {
     var dashboardShiftRepository: any RepositoryProtocol<DasboardShift> {
         get { self[DashboardShiftRepositoryKey.self] }
         set { self[DashboardShiftRepositoryKey.self] = newValue }
+    }
+
+    var productRepository: any RepositoryProtocol<Product> {
+        get { self[ProductRepositoryKey.self] }
+        set { self[ProductRepositoryKey.self] = newValue }
+    }
+    
+    var orderRepository: any RepositoryProtocol<CustomerOrder> {
+        get { self[OrderRepositoryKey.self] }
+        set { self[OrderRepositoryKey.self] = newValue }
     }
 }

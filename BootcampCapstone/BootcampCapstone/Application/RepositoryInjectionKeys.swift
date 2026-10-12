@@ -26,3 +26,10 @@ struct LowStockRepositoryKey: EnvironmentKey {
 struct DashboardShiftRepositoryKey: EnvironmentKey {
     static let defaultValue: any RepositoryProtocol<DasboardShift> = MockDashboardShiftRepo()
 }
+struct ProductRepositoryKey: EnvironmentKey {
+    static let defaultValue: any RepositoryProtocol<Product> = MockProductRepo()
+}
+
+struct OrderRepositoryKey: EnvironmentKey {
+    static let defaultValue: any RepositoryProtocol<CustomerOrder> = MockOrderRepo()
+}
