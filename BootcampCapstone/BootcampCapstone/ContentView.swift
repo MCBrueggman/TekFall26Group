@@ -17,6 +17,7 @@ struct ContentView: View {
 
     @Environment(\.employeeRepository) private var employeeRepository
     @Environment(\.productRepository) private var productRepository
+    @Environment(\.orderRepository) private var orderRepository
     @EnvironmentObject var authStatus: AuthStatus
    
     var body: some View {
@@ -25,6 +26,7 @@ struct ContentView: View {
                 switch current {
                 case "employees": EmployeeList(repository: employeeRepository)
                 case "products": ProductCatalog(repository: productRepository)
+                case "orders": OrderView(repository: orderRepository, productRepo: productRepository)
                     default: HomeView()
                 }
             }
@@ -32,8 +34,8 @@ struct ContentView: View {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
                         Button("Employee Info") { current = "employees"}
-                        Divider()
                         Button("Products") { current = "products"}
+                        Button("Orders") {current = "orders"}
                         Divider()
                         Button("Logout") { authStatus.updateLoginStatus(success: false)}
                     }
