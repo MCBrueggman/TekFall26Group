@@ -17,4 +17,10 @@ class BestWorstProducts: Codable, Identifiable {
         case id = "productId"
         case productName, unitsSold, unitsInStock
     }
+    init(id: Int, productName: String, unitsSold: Int, unitsInStock: Int){
+        self.id = id
+        self.productName = productName
+        self.unitsSold = unitsSold
+        self.unitsInStock = unitsInStock
+    }
 }

@@ -17,4 +17,10 @@ class LowStock: Codable, Identifiable {
         case id = "productId"
         case productName, stockLevel, reorderPoint
     }
+    init(id: Int, productName: String, stockLevel: Int, reorderPoint: Int){
+        self.id = id
+        self.productName = productName
+        self.stockLevel = stockLevel
+        self.reorderPoint = reorderPoint
+    }
 }

@@ -7,8 +7,16 @@
 
 import Foundation
 
-class WeeklySales: Codable {
+class WeeklySales: Codable, Identifiable {
     let salesDate: Date
     let totalSales: Double
     let totalProfit: Double
+    var id: Date{
+        salesDate
+    }
+    init(salesDate: Date, totalSales: Double, totalProfit: Double){
+        self.salesDate = salesDate
+        self.totalSales = totalSales
+        self.totalProfit = totalProfit
+    }
 }
