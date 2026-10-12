@@ -18,6 +18,34 @@ struct SwiftUIDemoApp: App {
             if authStatus.isLoggedIn {
                 ContentView()
                 .environment(\.employeeRepository, RemoteEmployeeRepo(urlBase: awAPIURL, authStatus: authStatus))
+                .environment(
+                                \.weeklySalesRepository,
+                                RemoteWeeklySalesRepo(
+                                    urlBase: awAPIURL,
+                                    authStatus: authStatus
+                                )
+                            )
+                            .environment(
+                                \.bestWorstRepository,
+                                RemoteBestWorstProductsRepo(
+                                    urlBase: awAPIURL,
+                                    authStatus: authStatus
+                                )
+                            )
+                            .environment(
+                                \.lowStockRepository,
+                                RemoteLowStockRepo(
+                                    urlBase: awAPIURL,
+                                    authStatus: authStatus
+                                )
+                            )
+                            .environment(
+                                \.dashboardShiftRepository,
+                                RemoteDashboardShiftRepo(
+                                    urlBase: awAPIURL,
+                                    authStatus: authStatus
+                                )
+                            )
                 .environmentObject(authStatus)
             } else {
                 LoginView()
