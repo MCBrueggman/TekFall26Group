@@ -20,7 +20,7 @@ struct EmployeeList: View {
             VStack {
                 List {
                     ForEach(viewModel.groupedEmployees, id: \.title) { group in
-                        Section(header: Text(group.title)) {
+                        DisclosureGroup(group.title) {
                             ForEach(group.employees) { employee in
                                 NavigationLink(value: employee) {
                                     HStack {
@@ -32,6 +32,7 @@ struct EmployeeList: View {
                     }
                 }
             }
+            .navigationTitle("Employees")
             .navigationDestination(for: Employee.self) { employee in
                 EmployeeDetailView(employee: employee, repository: viewModel.repository)
             }
