@@ -34,8 +34,13 @@ struct EmployeeList: View {
             }
             .navigationTitle("Employees")
             .navigationDestination(for: Employee.self) { employee in
-                EmployeeDetailView(employee: employee, repository: viewModel.repository)
+                EmployeeDetailView(employee: employee, repository: viewModel.repository) { updated in
+                    if let i = viewModel.employees.firstIndex(where: { $0.id == updated.id }) {
+                        viewModel.employees[i] = updated
+                    }
+                }
             }
+            .searchable(text: $viewModel.filter)
         }
         .task {
             await viewModel.loadEmployees()
@@ -59,11 +64,14 @@ extension EmployeeList {
                 filter = ""
             }
         }
+        // filter that allows the list to be searched by first and last names
         var filter: String   = "" {
             didSet {
                 matchingEmployee = employees.filter { employee in
-                    filter == "" || (employee.jobTitle.lowercased()
-                        .contains(filter.lowercased()))
+                    filter == "" || (employee.firstName.lowercased()
+                                    .contains(filter.lowercased()))
+                                 || (employee.lastName.lowercased()
+                                    .contains(filter.lowercased()))
                 }
             }
         }
@@ -77,6 +85,7 @@ extension EmployeeList {
         }
         var selectedEmployee: Employee?  = nil
         
+        // Groups the Employess by Department
         var groupedEmployees: [(title: String, employees: [Employee])] {
             let grouped = Dictionary(grouping: matchingEmployee) { $0.department ?? "Unspecified" }
             return grouped
@@ -86,6 +95,7 @@ extension EmployeeList {
                 .sorted { $0.title < $1.title }
         }
         
+        // Loads all the empoloyees from the repository
         func loadEmployees() async {
             do    { employees = try await repository.getAll() }
             catch { errorMessage = "\(error)" }

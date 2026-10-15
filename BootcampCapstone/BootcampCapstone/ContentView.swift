@@ -33,21 +33,23 @@ struct ContentView: View {
                 case "dashboard": DashboardView(weeklySalesRepository: weeklySalesRepository,
                                         bestWorstRepository: bestWorstRepository,
                                         lowStockRepository: lowStockRepository,
-                                        dashboardShiftRepository: dashboardShiftRepository
-                )
+                                        dashboardShiftRepository: dashboardShiftRepository)
                 case "products": ProductCatalog(repository: productRepository)
                 case "orders": OrderView(repository: orderRepository, productRepo: productRepository)
-                    default: HomeView()
+                    default: DashboardView(weeklySalesRepository: weeklySalesRepository,
+                                           bestWorstRepository: bestWorstRepository,
+                                           lowStockRepository: lowStockRepository,
+                                           dashboardShiftRepository: dashboardShiftRepository)
                 }
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     Menu {
+                        Button("Dasboard") { current = "dashboard"}
+                        Divider()
                         Button("Employee Info") { current = "employees"}
                         Button("Products") { current = "products"}
                         Button("Orders") {current = "orders"}
-                        Divider()
-                        Button("Dasboard") { current = "dashboard"}
                         Divider()
                         Button("Logout") { authStatus.updateLoginStatus(success: false)}
                     }

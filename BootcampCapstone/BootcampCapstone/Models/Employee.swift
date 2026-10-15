@@ -28,8 +28,8 @@ class Employee: Identifiable, Hashable, Codable {
     }
     
     init(id: Int, firstName: String, middleName: String? = nil, lastName: String,
-         suffix: String? = nil, title: String, jobTitle: String,
-    shift: String? = nil, department: String? = nil, hireDate: Date? = nil, shiftHistory: [ShiftHistory]? = nil) {
+         suffix: String? = nil, title: String, jobTitle: String, shift: String? = nil,
+         department: String? = nil, hireDate: Date? = nil, shiftHistory: [ShiftHistory]? = nil) {
         self.id             = id
         self.firstName      = firstName
         self.middleName     = middleName
@@ -77,4 +77,11 @@ class Employee: Identifiable, Hashable, Codable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(id)
     }
+}
+
+struct PersonalUpdate: Encodable {
+    let firstName: String
+    let middleName: String?
+    let lastName: String
+    let suffix: String?
 }

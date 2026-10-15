@@ -49,7 +49,7 @@ class RemoteRepositoryBase<Item: Codable> {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         
-        do    { request.httpBody = try JSONEncoder().encode(item) }
+        do    { request.httpBody = try makeEncoder().encode(item) }
         catch { throw NetworkError.encodingFailed(underlying: error) }
         
         let data = try await executeRequest(request)
@@ -64,23 +64,24 @@ class RemoteRepositoryBase<Item: Codable> {
     }
     
     // MARK: Put function
-    func put(_ urlString: String, send item: Item) async throws {
-        
+    func put<Body: Encodable>(_ urlString: String, send body: Body) async throws {
         var request = try createRequest(urlString)
         request.httpMethod = "PUT"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        
-        do    { request.httpBody = try JSONEncoder().encode(item) }
+
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+
+        do    { request.httpBody = try encoder.encode(body) }
         catch { throw NetworkError.encodingFailed(underlying: error) }
-        
+
         let _ = try await executeRequest(request)
-        
     }
     
     // MARK: Delete Function
     func del(_ urlString: String) async throws {
         var request = try createRequest(urlString)
-        request.httpMethod = "Delete"
+        request.httpMethod = "DELETE"
         let _ = try await executeRequest(request)
         
     }
@@ -98,10 +99,10 @@ class RemoteRepositoryBase<Item: Codable> {
     
     private func executeRequest(_ request: URLRequest, isRetry: Bool = false) async throws -> Data {
         let (data, response) = try await URLSession.shared.data(for: request)
-        
         guard let http = response as? HTTPURLResponse else {
             throw NetworkError.badResponse(statusCode: -1)
         }
+        print("Status:", http.statusCode, request.httpMethod ?? "?", request.url?.absoluteString ?? "")
         guard (200...299).contains(http.statusCode) else {
             if http.statusCode == 401 {
                 guard !isRetry,
@@ -155,6 +156,12 @@ class RemoteRepositoryBase<Item: Codable> {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid date: \(dateString)")
         }
         return decoder
+    }
+    private func makeEncoder() -> JSONEncoder {
+        let encoder = JSONEncoder()
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+        encoder.dateEncodingStrategy = .iso8601
+        return encoder
     }
         
 }

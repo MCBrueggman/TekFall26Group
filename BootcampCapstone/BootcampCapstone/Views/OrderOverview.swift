@@ -44,6 +44,8 @@ struct OrderOverview: View {
             catch { errorMessage = "\(error)"; print(errorMessage) }
         }
     }
+    
+    // allows you to go to that items view from this screen by comparing the ids
     private var productsById: [Int: Product] {
         Dictionary(products.map { ($0.id, $0) },
             uniquingKeysWith: { first, _ in first })

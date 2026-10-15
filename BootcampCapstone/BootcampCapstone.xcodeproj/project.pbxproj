@@ -29,19 +29,35 @@
 		5BA8D28A305C1D01005169DC /* BootcampCapstoneUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BootcampCapstoneUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		5B754AFC308169030011FD53 /* Exceptions for "BootcampCapstoneUITests" folder in "BootcampCapstoneTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BootcampCapstoneTests/BootcampCapstoneTests.swift,
+			);
+			target = 5BA8D27F305C1D01005169DC /* BootcampCapstoneTests */;
+		};
+		5B754AFD308169030011FD53 /* Exceptions for "BootcampCapstoneUITests" folder in "BootcampCapstoneUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				BootcampCapstoneTests/BootcampCapstoneTests.swift,
+			);
+			target = 5BA8D289305C1D01005169DC /* BootcampCapstoneUITests */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		5BA8D275305C1CFF005169DC /* BootcampCapstone */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = BootcampCapstone;
 			sourceTree = "<group>";
 		};
-		5BA8D283305C1D01005169DC /* BootcampCapstoneTests */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = BootcampCapstoneTests;
-			sourceTree = "<group>";
-		};
 		5BA8D28D305C1D01005169DC /* BootcampCapstoneUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				5B754AFC308169030011FD53 /* Exceptions for "BootcampCapstoneUITests" folder in "BootcampCapstoneTests" target */,
+				5B754AFD308169030011FD53 /* Exceptions for "BootcampCapstoneUITests" folder in "BootcampCapstoneUITests" target */,
+			);
 			path = BootcampCapstoneUITests;
 			sourceTree = "<group>";
 		};
@@ -76,7 +92,6 @@
 			isa = PBXGroup;
 			children = (
 				5BA8D275305C1CFF005169DC /* BootcampCapstone */,
-				5BA8D283305C1D01005169DC /* BootcampCapstoneTests */,
 				5BA8D28D305C1D01005169DC /* BootcampCapstoneUITests */,
 				5BA8D274305C1CFF005169DC /* Products */,
 			);
@@ -129,9 +144,6 @@
 			);
 			dependencies = (
 				5BA8D282305C1D01005169DC /* PBXTargetDependency */,
-			);
-			fileSystemSynchronizedGroups = (
-				5BA8D283305C1D01005169DC /* BootcampCapstoneTests */,
 			);
 			name = BootcampCapstoneTests;
 			packageProductDependencies = (
