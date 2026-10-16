@@ -3,9 +3,20 @@
 //  BootcampCapstone
 //
 //  Created by user301407 on 10/9/26.
+//  Modified by Shawn Defibaugh
 //
 
 import SwiftUI
+
+enum SortingShifts: String, CaseIterable, Identifiable {
+    case all = "All"
+    case day = "Day"
+    case evening = "Evening"
+    case night = "Night"
+    
+    var id: Self { self }
+}
+
 struct DashboardShiftDetailsView: View {
     @State private var viewModel: ViewModel
     
@@ -19,14 +30,24 @@ struct DashboardShiftDetailsView: View {
                 .font(.largeTitle)
                 .bold()
             
-            List(viewModel.shifts) { employee in
-                        VStack(alignment: .leading) {
-                            Text("\(employee.firstName) \(employee.lastName)")
-                                .font(.headline)
-                            
-                            Text("Shift: \(employee.shift)")
-                        }
-                    }
+            Picker("Shift", selection: $viewModel.shiftFilter) {
+                ForEach(SortingShifts.allCases) { option in
+                    Text(option.rawValue).tag(option)
+                }
+            }
+            
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            
+            List(viewModel.filteredShifts) { employee in
+                VStack(alignment: .leading) {
+                    Text("\(employee.firstName) \(employee.lastName)")
+                        .font(.headline)
+                    
+                    Text("Shift: \(employee.shift)")
+                }
+            }
+            .animation(.default, value: viewModel.shiftFilter)
         }
         .task {
             print("TaskStarted")
@@ -34,6 +55,7 @@ struct DashboardShiftDetailsView: View {
         }
     }
 }
+
 extension DashboardShiftDetailsView {
     @Observable
     class ViewModel: Failable {
@@ -41,8 +63,18 @@ extension DashboardShiftDetailsView {
         init(repository: any RepositoryProtocol<DasboardShift>) {
             self.repository = repository
         }
+        
         var errorMessage: String = ""
         var shifts: [DasboardShift] = []
+        var shiftFilter: SortingShifts = .all
+        
+        var filteredShifts: [DasboardShift] {
+            guard shiftFilter != .all else { return shifts }
+            return shifts.filter {
+                $0.shift.localizedCaseInsensitiveCompare(shiftFilter.rawValue) == .orderedSame
+            }
+        }
+        
         func loadShifts() async {
             do {
                 shifts = try await repository.getAll()
