@@ -24,26 +24,48 @@ struct ProductCatalog: View {
         viewModel = ViewModel(repository: repository)
     }
     
-    var body: some View {
-        NavigationStack {
-            List(viewModel.filteredProducts) { product in
-                NavigationLink(value: product) {
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text(product.name)
-                                .font(.headline)
-                            Text(product.productNumber)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
-                        }
-                        Spacer()
-                        Text(product.listPrice.formatted(.currency(code: "USD")))
+    var listOfProducts: some View {
+        List(viewModel.filteredProducts) { product in
+            NavigationLink(value: product) {
+                HStack {
+                    VStack(alignment: .leading) {
+                        Text(product.name)
+                            .font(.headline)
+                        Text(product.productNumber)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
                     }
+                    Spacer()
+                    Text(product.listPrice.formatted(.currency(code: "USD")))
                 }
             }
+        }
+        .refreshable {
+            await viewModel.loader.load(userInitiated: true)
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            LoadingStateContainer(loader: viewModel.loader, content: listOfProducts)
             .navigationTitle("Products")
             .searchable(text: $viewModel.filter)
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        Task {
+                            await viewModel.loader.load(userInitiated: true)
+                        }
+                    } label: {
+                        if viewModel.loader.state == .refreshing {
+                            ProgressView()
+                        }
+                        else {
+                            Image(systemName: "arrow.clockwise")
+                        }
+                    }
+                    .disabled(viewModel.loader.isBusy)
+                }
                 DefaultToolbarItem(kind: .search, placement: .bottomBar)
                 ToolbarSpacer(.fixed, placement: .bottomBar)
                 ToolbarItem(placement: .bottomBar) {
@@ -63,22 +85,32 @@ struct ProductCatalog: View {
             }
         }
         .task {
-            await viewModel.loadProducts()
+            await viewModel.loader.load()
         }
     }
 }
 
 extension ProductCatalog {
+    @MainActor
     @Observable
     class ViewModel: Failable {
         
         let repository: any RepositoryProtocol<Product>
+        let loader: LoadingController<Product>
+        
         init(repository: any RepositoryProtocol<Product>) {
             self.repository = repository
+            self.loader =
+            LoadingController {
+                try await repository.getAll()
+            }
         }
         
         var errorMessage: String = ""
-        var products: [Product] = []
+        var products: [Product] {
+            loader.items
+        }
+        
         var filter: String = ""
         var sorting: SortingProducts = .atoz
         
@@ -105,12 +137,6 @@ extension ProductCatalog {
                 $0.productNumber.localizedCaseInsensitiveContains(filter)
             }
             return sortedList(matches)
-        }
-        
-        func loadProducts() async {
-            do    { products = try await repository.getAll() }
-            catch { errorMessage = "\(error)" }
-            print(errorMessage)
         }
     }
 }

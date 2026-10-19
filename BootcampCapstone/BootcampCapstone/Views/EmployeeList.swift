@@ -27,99 +27,114 @@ struct EmployeeList: View {
         viewModel = ViewModel(repository: repository)
     }
     
-    var body: some View {
-        NavigationStack {
-            VStack {
-                Picker("View", selection: $viewModel.inGroups) {
-                    Text("Departments").tag(true)
-                    Text("Employees").tag(false)
+    var employeeBody: some View {
+        VStack {
+            Picker("View", selection: $viewModel.inGroups) {
+                Text("Departments").tag(true)
+                Text("Employees").tag(false)
+            }
+            .pickerStyle(.segmented)
+            .padding(.horizontal)
+            .padding(.top, 8)
+            
+            List {
+                if viewModel.inGroups {
+                    ForEach(viewModel.groupedEmployees, id: \.title) { group in
+                        DisclosureGroup(group.title) {
+                            ForEach(group.employees) { employee in
+                                EmployeeRow(employee: employee)
+                            }
+                        }
+                    }
                 }
-                .pickerStyle(.segmented)
-                .padding(.horizontal)
-                .padding(.top, 8)
                 
-                List {
-                    if viewModel.inGroups {
-                        ForEach(viewModel.groupedEmployees, id: \.title) { group in
-                            DisclosureGroup(group.title) {
-                                ForEach(group.employees) { employee in
-                                    EmployeeRow(employee: employee)
-                                }
-                            }
-                        }
-                    }
-                    
-                    else {
-                        ForEach(viewModel.sortedEmployees) { employee in
-                            EmployeeRow(employee: employee)
-                        }
-                    }
-                }
-                .animation(.default, value: viewModel.inGroups)
-            }
-            .navigationTitle("Employees")
-            .searchable(text: $viewModel.filter)
-            .toolbar {
-                DefaultToolbarItem(kind: .search, placement: .bottomBar)
-                ToolbarSpacer(.fixed, placement: .bottomBar)
-                ToolbarItem(placement: .bottomBar) {
-                    Menu {
-                        Picker("Sort by", selection: $viewModel.sorting) {
-                            ForEach(SortingEmployees.allCases) { option in
-                                Text(option.rawValue).tag(option)
-                            }
-                        }
-                    } label: {
-                        Image(systemName: "line.3.horizontal.decrease.circle")
+                else {
+                    ForEach(viewModel.sortedEmployees) { employee in
+                        EmployeeRow(employee: employee)
                     }
                 }
             }
-            .navigationDestination(for: Employee.self) { employee in
-                EmployeeDetailView(employee: employee, repository: viewModel.repository)
+            .animation(.default, value: viewModel.inGroups)
+            .refreshable {
+                await viewModel.loader.load(userInitiated: true)
             }
         }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            LoadingStateContainer(loader: viewModel.loader, content: employeeBody)
+                .navigationTitle("Employees")
+                .searchable(text: $viewModel.filter)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            Task {
+                                await viewModel.loader.load(userInitiated: true)
+                            }
+                        } label: {
+                            if viewModel.loader.state == .refreshing {
+                                ProgressView()
+                            }
+                            else {
+                                Image(systemName: "arrow.clockwise")
+                            }
+                        }
+                        .disabled(viewModel.loader.isBusy)
+                    }
+                    DefaultToolbarItem(kind: .search, placement: .bottomBar)
+                    ToolbarSpacer(.fixed, placement: .bottomBar)
+                    ToolbarItem(placement: .bottomBar) {
+                        Menu {
+                            Picker("Sort by", selection: $viewModel.sorting) {
+                                ForEach(SortingEmployees.allCases) { option in
+                                    Text(option.rawValue).tag(option)
+                                }
+                            }
+                        } label: {
+                            Image(systemName: "line.3.horizontal.decrease.circle")
+                        }
+                    }
+                }
+                .navigationDestination(for: Employee.self) { employee in
+                    EmployeeDetailView(employee: employee, repository: viewModel.repository)
+                }
+        }
         .task {
-            await viewModel.loadEmployees()
+            await viewModel.loader.load()
         }
     }
 }
 
 extension EmployeeList {
+    @MainActor
     @Observable
     class ViewModel: Failable {
         
         let repository: any RepositoryProtocol<Employee>
+        let loader: LoadingController<Employee>
+        
         init(repository: any RepositoryProtocol<Employee>) {
             self.repository = repository
+            self.loader = LoadingController {
+                try await repository.getAll()
+            }
         }
         
-        private let counter: Double = 0
         var errorMessage: String = ""
         
-        var employees: [Employee] = [] {
-            didSet {
-                filter = ""
-            }
+        var employees: [Employee] {
+            loader.items
         }
         
-        var filter: String   = "" {
-            didSet {
-                matchingEmployee = employees.filter { employee in
-                    filter.isEmpty
-                    || employee.jobTitle.localizedCaseInsensitiveContains(filter)
-                    || employee.firstName.localizedCaseInsensitiveContains(filter)
-                    || employee.lastName.localizedCaseInsensitiveContains(filter)
-                    || String(employee.id).contains(filter)
-                }
-            }
-        }
-        
-        var matchingEmployee: [Employee] = [] {
-            didSet {
-                if let selected = selectedEmployee,
-                   !matchingEmployee.contains(selected) {
-                    selectedEmployee = nil
-                }
+        var filter: String   = ""
+        var matchingEmployee: [Employee] {
+            employees.filter { employee in
+                filter.isEmpty
+                || employee.jobTitle.localizedCaseInsensitiveContains(filter)
+                || employee.firstName.localizedCaseInsensitiveContains(filter)
+                || employee.lastName.localizedCaseInsensitiveContains(filter)
+                || String(employee.id).contains(filter)
             }
         }
         
@@ -167,13 +182,6 @@ extension EmployeeList {
         var sortedEmployees: [Employee] {
             sortedList(matchingEmployee)
         }
-        
-        func loadEmployees() async {
-            do    { employees = try await repository.getAll() }
-            catch { errorMessage = "\(error)" }
-            print(errorMessage)
-            
-        }
     }
 }
 
@@ -192,7 +200,3 @@ struct EmployeeRow: View {
         }
     }
 }
-
-//#Preview {
-//    ArtistList()
-//}
