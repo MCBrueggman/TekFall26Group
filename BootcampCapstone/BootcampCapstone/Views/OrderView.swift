@@ -1,7 +1,6 @@
 //
 //  OrderView.swift
 //  BootcampCapstone
-//
 //  Created by Solomon Chambers on 10/11/26.
 //  Modified by Shawn Defibaugh
 //
@@ -18,7 +17,6 @@ enum SortingOrders: String, CaseIterable, Identifiable {
 }
 
 struct OrderView: View {
-    
     @State var viewModel: ViewModel
     let productRepo: any RepositoryProtocol<Product>
     
@@ -28,137 +26,189 @@ struct OrderView: View {
     }
     
     var body: some View {
-        VStack {
-            NavigationStack {
-                Text("Active Orders")
-                    .font(.largeTitle)
-                    .bold()
-                
-                Text("Showing \(viewModel.groupedOrders.count) orders · \(viewModel.grandTotal.formatted(.currency(code: "USD")))")
-                
-                VStack {
-                    Picker("View", selection: $viewModel.showingAllOrders) {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // MARK: - Header Info & View Switcher
+                VStack(spacing: 8) {
+                    Text("Active Orders")
+                        .font(.largeTitle)
+                        .bold()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    Text("Showing \(viewModel.groupedOrders.count) orders • Total: \(viewModel.grandTotal.formatted(.currency(code: "USD")))")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .accessibilityLabel("\(viewModel.groupedOrders.count) total orders active, worth \(viewModel.grandTotal.formatted(.currency(code: "USD")))")
+                    
+                    Picker("Order View Mode", selection: $viewModel.showingAllOrders) {
                         Text("All Orders").tag(true)
-                        Text("Dates").tag(false)
+                        Text("Grouped by Date").tag(false)
                     }
                     .pickerStyle(.segmented)
-                    .padding(.horizontal)
-                    .padding(.top, 8)
-                    
-                    List {
-                        if viewModel.showingAllOrders {
-                            ForEach(viewModel.sortedOrders) { order in
-                                OrderRow(order: order)
-                            }
+                    .padding(.top, 4)
+                    .accessibilityLabel("Order view mode switcher")
+                    .accessibilityHint("Switches between a flat list of all active orders and orders grouped by date")
+                }
+                .padding()
+                .background(Color(UIColor.secondarySystemGroupedBackground))
+                
+                // MARK: - Order List
+                List {
+                    if viewModel.showingAllOrders {
+                        ForEach(viewModel.sortedOrders) { order in
+                            OrderRow(order: order)
                         }
-                        
-                        else {
-                            ForEach(viewModel.ordersByDate) { group in
-                                DisclosureGroup {
-                                    ForEach(group.orders) { order in
-                                        OrderRow(order: order)
-                                    }
-                                } label: {
-                                    HStack {
+                    } else {
+                        ForEach(viewModel.ordersByDate) { group in
+                            DisclosureGroup {
+                                ForEach(group.orders) { order in
+                                    OrderRow(order: order)
+                                }
+                            } label: {
+                                ViewThatFits(in: .horizontal) {
+                                    HStack(alignment: .firstTextBaseline) {
                                         VStack(alignment: .leading, spacing: 2) {
                                             Text(group.title)
-                                                .font(.title3)
-                                                .bold()
+                                                .font(.headline)
                                             Text("\(group.count) orders")
                                                 .font(.caption)
                                                 .foregroundStyle(.secondary)
                                         }
                                         Spacer()
                                         Text(group.total.formatted(.currency(code: "USD")))
+                                            .font(.body)
+                                            .bold()
+                                            .monospacedDigit()
+                                    }
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(group.title)
+                                            .font(.headline)
+                                        Text("\(group.count) orders")
+                                            .font(.caption)
                                             .foregroundStyle(.secondary)
+                                        Text(group.total.formatted(.currency(code: "USD")))
+                                            .font(.body)
+                                            .bold()
                                     }
                                 }
+                                .padding(.vertical, 4)
                             }
+                            .accessibilityLabel("Date group: \(group.title), \(group.count) orders, Group total: \(group.total.formatted(.currency(code: "USD")))")
                         }
                     }
                 }
-                
                 .animation(.default, value: viewModel.showingAllOrders)
-                .navigationDestination(for: GroupedOrder.self) { order in
-                    OrderOverview(order: order, repository: viewModel.repository, productRepo: productRepo)
-                }
-                .searchable(text: $viewModel.filter)
-                .toolbar {
-                    DefaultToolbarItem(kind: .search, placement: .bottomBar)
-                    ToolbarSpacer(.fixed, placement: .bottomBar)
-                    ToolbarItem(placement: .bottomBar) {
-                        Menu {
-                            Picker("Sort by", selection: $viewModel.sortOption) {
-                                ForEach(SortingOrders.allCases) { option in
-                                    Text(option.rawValue).tag(option)
-                                }
+            }
+            .navigationTitle("Orders")
+            .navigationBarTitleDisplayMode(.inline)
+            .searchable(text: $viewModel.filter, prompt: "Search order # or customer name")
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Menu {
+                        Picker("Sort by", selection: $viewModel.sortOption) {
+                            ForEach(SortingOrders.allCases) { option in
+                                Text(option.rawValue).tag(option)
                             }
-                        } label: {
-                            Image(systemName: "line.3.horizontal.decrease.circle")
                         }
+                    } label: {
+                        Image(systemName: "line.3.horizontal.decrease.circle")
+                            .font(.title3)
+                            .frame(width: 44, height: 44) // Guaranteed 44x44pt touch target
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityLabel("Sort options")
+                    .accessibilityHint("Select sorting criteria for active orders")
                 }
             }
-            .task {
-                await viewModel.loadOrders()
+            .navigationDestination(for: GroupedOrder.self) { order in
+                OrderOverview(order: order, repository: viewModel.repository, productRepo: productRepo)
             }
+        }
+        .task {
+            await viewModel.loadOrders()
         }
     }
 }
 
+// MARK: - Accessible Order Row
 struct OrderRow: View {
     let order: GroupedOrder
     
     var body: some View {
         NavigationLink(value: order) {
-            HStack {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: "Order #\(order.orderNumber)")
+            ViewThatFits(in: .horizontal) {
+                // Standard Horizontal Layout
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Order #\(order.orderNumber)")
+                            .font(.headline)
+                        Text("\(order.firstName) \(order.lastName)")
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text(order.total.formatted(.currency(code: "USD")))
+                        .font(.body)
+                        .bold()
+                        .monospacedDigit()
+                }
+                
+                // Dynamic Type Reflow Layout (Vertical Stack for Accessibility Text Sizes)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Order #\(order.orderNumber)")
                         .font(.headline)
                     Text("\(order.firstName) \(order.lastName)")
                         .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text(order.total.formatted(.currency(code: "USD")))
+                        .font(.body)
+                        .bold()
                 }
-                Spacer()
-                Text(order.total.formatted(.currency(code: "USD")))
-                    .monospacedDigit()
-                    .foregroundStyle(.secondary)
             }
+            .padding(.vertical, 4)
         }
+        .frame(minHeight: 44) // 44pt minimum touch target height
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Order number \(order.orderNumber), Customer: \(order.firstName) \(order.lastName), Total amount: \(order.total.formatted(.currency(code: "USD")))")
+        .accessibilityHint("Double tap to open complete order summary")
     }
 }
 
 extension OrderView {
     @Observable
     class ViewModel: Failable {
-        
         let repository: any RepositoryProtocol<CustomerOrder>
         init(repository: any RepositoryProtocol<CustomerOrder>) { self.repository = repository }
         var errorMessage: String = ""
         
         var orders: [CustomerOrder] = [] {
-            didSet {
-                filter = ""
-            }
+            didSet { filter = "" }
         }
-        var filter: String   = "" {
+        
+        var filter: String = "" {
             didSet {
                 matchingOrder = orders.filter { order in
                     filter.isEmpty
-                    || String(order.orderNumber).contains(filter)                 // Filter by Order Number
-                    || order.firstName.localizedCaseInsensitiveContains(filter)   // Filter by First Name
-                    || order.lastName.localizedCaseInsensitiveContains(filter)    // Filter by Last Name
+                    || String(order.orderNumber).contains(filter)
+                    || order.firstName.localizedCaseInsensitiveContains(filter)
+                    || order.lastName.localizedCaseInsensitiveContains(filter)
                 }
             }
         }
+        
         var matchingOrder: [CustomerOrder] = [] {
             didSet {
-                if let selected = selectedOrder,
+                if let selected = selectedEmployee,
                    !matchingOrder.contains(selected) {
-                    selectedOrder = nil
+                    selectedEmployee = nil
                 }
             }
         }
-        var selectedOrder: CustomerOrder?  = nil
+        
+        var selectedEmployee: CustomerOrder? = nil
+        var showingAllOrders: Bool = true
+        var sortOption: SortingOrders = .newestToOldest
         
         var groupedOrders: [GroupedOrder] {
             Dictionary(grouping: matchingOrder, by: \.orderNumber)
@@ -166,41 +216,30 @@ extension OrderView {
                 .sorted { $0.orderNumber < $1.orderNumber }
         }
         
-        var showingAllOrders: Bool = true
-        var sortOption: SortingOrders = .newestToOldest
-        
         private func sortedList(_ list: [GroupedOrder]) -> [GroupedOrder] {
             switch sortOption {
             case .newestToOldest:
                 return list.sorted {
                     let orderA = $0.orderDate ?? .distantPast
                     let orderB = $1.orderDate ?? .distantPast
-                    if orderA != orderB {
-                        return orderA > orderB
-                    }
+                    if orderA != orderB { return orderA > orderB }
                     return $0.orderNumber > $1.orderNumber
                 }
             case .oldestToNewest:
                 return list.sorted {
                     let orderA = $0.orderDate ?? .distantPast
                     let orderB = $1.orderDate ?? .distantPast
-                    if orderA != orderB {
-                        return orderA < orderB
-                    }
+                    if orderA != orderB { return orderA < orderB }
                     return $0.orderNumber < $1.orderNumber
                 }
             case .highestToLowest:
                 return list.sorted {
-                    if $0.total != $1.total {
-                        return $0.total > $1.total
-                    }
+                    if $0.total != $1.total { return $0.total > $1.total }
                     return $0.orderNumber > $1.orderNumber
                 }
             case .lowestToHighest:
                 return list.sorted {
-                    if $0.total != $1.total {
-                        return $0.total < $1.total
-                    }
+                    if $0.total != $1.total { return $0.total < $1.total }
                     return $0.orderNumber < $1.orderNumber
                 }
             }
@@ -214,7 +253,7 @@ extension OrderView {
             let groups = Dictionary(grouping: groupedOrders) { order in
                 order.orderDate.map { utcCalendar.startOfDay(for: $0) }
             }
-                .map { GroupedOrdersByDate(date: $0.key, orders: sortedList($0.value)) }
+            .map { GroupedOrdersByDate(date: $0.key, orders: sortedList($0.value)) }
             
             switch sortOption {
             case .newestToOldest:
@@ -239,7 +278,7 @@ extension OrderView {
         }
         
         func loadOrders() async {
-            do    { orders = try await repository.getAll() }
+            do { orders = try await repository.getAll() }
             catch { errorMessage = "\(error)" }
             print(errorMessage)
         }

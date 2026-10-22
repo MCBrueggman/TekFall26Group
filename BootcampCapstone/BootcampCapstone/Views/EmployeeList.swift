@@ -1,7 +1,6 @@
 //
-//  LoginView.swift
+//  EmployeeList.swift
 //  BootcampCapstone
-//
 //  Created by Solomon Chambers on 9/21/26.
 //  Modified by Shawn Defibaugh
 //
@@ -20,7 +19,6 @@ enum SortingEmployees: String, CaseIterable, Identifiable {
 }
 
 struct EmployeeList: View {
-    
     @State var viewModel: ViewModel
     
     init(repository: any RepositoryProtocol<Employee>) {
@@ -29,15 +27,19 @@ struct EmployeeList: View {
     
     var body: some View {
         NavigationStack {
-            VStack {
-                Picker("View", selection: $viewModel.inGroups) {
+            VStack(spacing: 0) {
+                // MARK: - View Mode Picker (Adequate Touch Target & Scalable)
+                Picker("View Mode", selection: $viewModel.inGroups) {
                     Text("Departments").tag(true)
                     Text("Employees").tag(false)
                 }
                 .pickerStyle(.segmented)
                 .padding(.horizontal)
-                .padding(.top, 8)
+                .padding(.vertical, 8)
+                .accessibilityLabel("Employee view mode selector")
+                .accessibilityHint("Switches between grouped department view and flat employee list")
                 
+                // MARK: - Employee List
                 List {
                     if viewModel.inGroups {
                         ForEach(viewModel.groupedEmployees, id: \.title) { group in
@@ -46,10 +48,9 @@ struct EmployeeList: View {
                                     EmployeeRow(employee: employee)
                                 }
                             }
+                            .accessibilityLabel("Department: \(group.title), \(group.employees.count) employees")
                         }
-                    }
-                    
-                    else {
+                    } else {
                         ForEach(viewModel.sortedEmployees) { employee in
                             EmployeeRow(employee: employee)
                         }
@@ -58,11 +59,9 @@ struct EmployeeList: View {
                 .animation(.default, value: viewModel.inGroups)
             }
             .navigationTitle("Employees")
-            .searchable(text: $viewModel.filter)
+            .searchable(text: $viewModel.filter, prompt: "Search name, title, or ID")
             .toolbar {
-                DefaultToolbarItem(kind: .search, placement: .bottomBar)
-                ToolbarSpacer(.fixed, placement: .bottomBar)
-                ToolbarItem(placement: .bottomBar) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Menu {
                         Picker("Sort by", selection: $viewModel.sorting) {
                             ForEach(SortingEmployees.allCases) { option in
@@ -71,7 +70,12 @@ struct EmployeeList: View {
                         }
                     } label: {
                         Image(systemName: "line.3.horizontal.decrease.circle")
+                            .font(.title3)
+                            .frame(width: 44, height: 44) // Guaranteed 44x44pt touch target
+                            .contentShape(Rectangle())
                     }
+                    .accessibilityLabel("Sort options")
+                    .accessibilityHint("Select sorting order for employee list")
                 }
             }
             .navigationDestination(for: Employee.self) { employee in
@@ -84,25 +88,67 @@ struct EmployeeList: View {
     }
 }
 
+// MARK: - Accessible Employee Row
+struct EmployeeRow: View {
+    let employee: Employee
+    
+    var body: some View {
+        NavigationLink(value: employee) {
+            ViewThatFits(in: .horizontal) {
+                // Standard Horizontal Layout
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("\(employee.firstName) \(employee.lastName)")
+                            .font(.headline)
+                        Text(employee.jobTitle)
+                            .font(.subheadline)
+                            .foregroundStyle(.secondary)
+                    }
+                    Spacer()
+                    Text("ID: \(employee.id)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+                
+                // Dynamic Type Reflow Layout (Vertical Stack for Large Text Settings)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("\(employee.firstName) \(employee.lastName)")
+                        .font(.headline)
+                    Text(employee.jobTitle)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                    Text("ID: \(employee.id)")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
+                }
+            }
+            .padding(.vertical, 4)
+        }
+        .frame(minHeight: 44) // 44pt minimum touch target
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("\(employee.firstName) \(employee.lastName), Job Title: \(employee.jobTitle), Employee ID: \(employee.id)")
+        .accessibilityHint("Double tap to open employee details")
+    }
+}
+
 extension EmployeeList {
     @Observable
     class ViewModel: Failable {
-        
         let repository: any RepositoryProtocol<Employee>
         init(repository: any RepositoryProtocol<Employee>) {
             self.repository = repository
         }
         
-        private let counter: Double = 0
         var errorMessage: String = ""
-        
         var employees: [Employee] = [] {
             didSet {
                 filter = ""
             }
         }
         
-        var filter: String   = "" {
+        var filter: String = "" {
             didSet {
                 matchingEmployee = employees.filter { employee in
                     filter.isEmpty
@@ -123,36 +169,24 @@ extension EmployeeList {
             }
         }
         
-        var selectedEmployee: Employee?  = nil
-        
+        var selectedEmployee: Employee? = nil
         var sorting: SortingEmployees = .lastNameAZ
+        var inGroups: Bool = true
         
         private func sortedList(_ list: [Employee]) -> [Employee] {
             switch sorting {
             case .lastNameZA:
-                return list.sorted {
-                    $0.lastName.localizedCaseInsensitiveCompare($1.lastName) == .orderedDescending
-                }
+                return list.sorted { $0.lastName.localizedCaseInsensitiveCompare($1.lastName) == .orderedDescending }
             case .firstNameZA:
-                return list.sorted {
-                    $0.firstName.localizedCaseInsensitiveCompare($1.firstName) == .orderedDescending
-                }
+                return list.sorted { $0.firstName.localizedCaseInsensitiveCompare($1.firstName) == .orderedDescending }
             case .lastNameAZ:
-                return list.sorted {
-                    $0.lastName.localizedCaseInsensitiveCompare($1.lastName) == .orderedAscending
-                }
+                return list.sorted { $0.lastName.localizedCaseInsensitiveCompare($1.lastName) == .orderedAscending }
             case .firstNameAZ:
-                return list.sorted {
-                    $0.firstName.localizedCaseInsensitiveCompare($1.firstName) == .orderedAscending
-                }
+                return list.sorted { $0.firstName.localizedCaseInsensitiveCompare($1.firstName) == .orderedAscending }
             case .idLowToHigh:
-                return list.sorted {
-                    $0.id < $1.id
-                }
+                return list.sorted { $0.id < $1.id }
             case .idHighToLow:
-                return list.sorted {
-                    $0.id > $1.id
-                }
+                return list.sorted { $0.id > $1.id }
             }
         }
         
@@ -162,37 +196,14 @@ extension EmployeeList {
                 .sorted { $0.title < $1.title }
         }
         
-        var inGroups: Bool = true
-        
         var sortedEmployees: [Employee] {
             sortedList(matchingEmployee)
         }
         
         func loadEmployees() async {
-            do    { employees = try await repository.getAll() }
+            do { employees = try await repository.getAll() }
             catch { errorMessage = "\(error)" }
             print(errorMessage)
-            
         }
     }
 }
-
-struct EmployeeRow: View {
-    let employee: Employee
-    
-    var body: some View {
-        NavigationLink(value: employee) {
-            HStack {
-                Text("\(employee.firstName) \(employee.lastName)")
-                Spacer()
-                Text("ID: \(employee.id)")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-    }
-}
-
-//#Preview {
-//    ArtistList()
-//}

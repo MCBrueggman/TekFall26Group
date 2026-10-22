@@ -1,9 +1,8 @@
 //
 //  LoginView.swift
 //  BootcampCapstone
-//
 //  Created by Solomon Chambers on 9/17/26.
-//
+//  Modified by Mike Brueggman
 
 import SwiftUI
 
@@ -12,87 +11,67 @@ struct LoginView: View {
     @EnvironmentObject var authStatus: AuthStatus
     
     var body: some View {
-        VStack {
-            Spacer()
-            Text("Login")
-                .font(.custom("Inter-Regular", size: 45, relativeTo: .body).bold())
-            Spacer()
-            TextField("Username", text: $viewModel.credentials.username)
-                .font(.custom("Inter-Regular", size: 25, relativeTo: .body))
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray, lineWidth: 1)
-                )
-            
-            Spacer().frame(height: 20)
-            SecureField("Password", text: $viewModel.credentials.password)
-                .font(.custom("Inter-Regular", size: 25, relativeTo: .body))
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding()
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(Color.gray, lineWidth: 1)
-                )
-            
-            if viewModel.isBusy { ProgressView() }
-            Spacer()
-            
-            Button {
-                Task {
-                    let response = await viewModel.login()
-                    if let resp = response {
-                        authStatus.updateLoginStatus(success: resp.success, authToken: resp.accessToken, refreshToken: resp.refreshToken)
+        ScrollView {
+            VStack(spacing: 24) {
+                Spacer(minLength: 40)
+                
+                Text("Login")
+                    .font(.largeTitle)
+                    .bold()
+                    .accessibilityAddTraits(.isHeader)
+                
+                VStack(spacing: 16) {
+                    TextField("Username", text: $viewModel.credentials.username)
+                        .font(.body)
+                        .padding()
+                        .frame(minHeight: 44)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                        .textInputAutocapitalization(.never)
+                        .autocorrectionDisabled()
+                        .accessibilityLabel("Username text field")
+                    
+                    SecureField("Password", text: $viewModel.credentials.password)
+                        .font(.body)
+                        .padding()
+                        .frame(minHeight: 44)
+                        .overlay(RoundedRectangle(cornerRadius: 8).stroke(Color.gray, lineWidth: 1))
+                        .accessibilityLabel("Password text field")
+                }
+                
+                if viewModel.isBusy {
+                    ProgressView("Authenticating...")
+                        .frame(minHeight: 44)
+                }
+                
+                Button {
+                    Task {
+                        let response = await viewModel.login()
+                        if let resp = response {
+                            authStatus.updateLoginStatus(success: resp.success, authToken: resp.accessToken, refreshToken: resp.refreshToken)
+                        }
                     }
+                } label: {
+                    Text("Log In")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 44)
                 }
-            } label: {
-                Text("Log in")
-                    .font(.custom("Inter-Regular", size: 25, relativeTo: .body))
-                    .frame(maxWidth: .infinity)
+                .buttonStyle(.borderedProminent)
+                .disabled(viewModel.loginDisabled)
+                .accessibilityLabel("Log in button")
+                .accessibilityHint("Authenticates credentials and opens application overview")
+                
+                if !viewModel.errorMessage.isEmpty {
+                    Label(viewModel.errorMessage, systemImage: "exclamationmark.triangle.fill")
+                        .font(.subheadline)
+                        .foregroundStyle(.red)
+                        .accessibilityLabel("Error: \(viewModel.errorMessage)")
+                }
+                
+                Spacer(minLength: 20)
             }
-            .buttonStyle(.borderedProminent)
-            .tint(viewModel.loginDisabled ? .gray : .blue)
-            .disabled(viewModel.loginDisabled)
-            .padding(.horizontal)
-            .padding(.bottom, 24)
-            
-            if !viewModel.errorMessage.isEmpty {
-                Text(viewModel.errorMessage)
-                .foregroundColor(Color.red)
-            }
+            .padding(20)
         }
-        .padding(20)
-        .autocapitalization(.none)
         .disabled(viewModel.isBusy)
-    }
-}
-
-extension LoginView {
-    @Observable
-    class ViewModel {
-        var credentials = LoginModel()
-        var isBusy = false
-        
-        var loginDisabled: Bool {
-            credentials.username.isEmpty || credentials.password.isEmpty
-        }
-        var errorMessage: String = ""
-        
-        func login() async -> LoginResponse? {
-            isBusy = true
-            do {
-                let result = try await AuthService.shared.login(credentials: credentials)
-                isBusy = false
-                if !result.success {
-                    errorMessage = "Invalid username/password combination"
-                }
-                return result
-            } catch {
-                errorMessage = "\(error)"
-            }
-            isBusy = false
-            return nil
-        }
     }
 }
