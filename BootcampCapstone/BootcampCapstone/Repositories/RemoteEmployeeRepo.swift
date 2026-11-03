@@ -32,8 +32,12 @@ class RemoteEmployeeRepo: RemoteRepositoryBase<Employee>, RepositoryProtocol<Emp
     }
     
     func update(_ item: Employee) async throws {
-        let urlString = "\(urlBase)/Employee/\(item.id)"
-        try await put(urlString, send: item)
+        let urlString = "\(urlBase)/Employee"
+        try await put("\(urlString)/personal/\(item.id)",
+                      send: PersonalUpdate(firstName: item.firstName,
+                                           middleName: item.middleName,
+                                           lastName: item.lastName,
+                                           suffix: item.suffix))
     }
     
     func delete(_ item: Employee) async throws {

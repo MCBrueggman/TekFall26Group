@@ -8,11 +8,19 @@
 import SwiftUI
 
 struct EmployeeDetailView: View {
-    let employee: Employee
     let repository: any RepositoryProtocol<Employee>
+    @State private var employee: Employee
     
     @State private var employmentDetails: Employee?
     @State private var errorMessage: String = ""
+    @State private var showingEdit = false
+    let onUpdate: (Employee) -> Void
+    
+    init(employee: Employee, repository: any RepositoryProtocol<Employee>, onUpdate: @escaping (Employee) -> Void) {
+            _employee = State(initialValue: employee)
+            self.repository = repository
+            self.onUpdate = onUpdate
+        }
     
     var body: some View {
         VStack {
@@ -65,6 +73,22 @@ struct EmployeeDetailView: View {
             do    { employmentDetails = try await repository.getById(employee.id) }
             catch { errorMessage = "\(error)" }
             print(errorMessage)
+        }
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) {
+                Button("Edit") { showingEdit = true }
+            }
+        }
+        .sheet(isPresented: $showingEdit) {
+            EmployeeEditView(employee: employee) { updated in
+                Task {
+                    do {
+                        try await repository.update(updated)
+                        employee = updated
+                        onUpdate(updated)
+                    } catch { errorMessage = "\(error)" }
+                }
+            }
         }
     }
 }

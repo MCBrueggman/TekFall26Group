@@ -136,10 +136,9 @@ extension OrderView {
         var errorMessage: String = ""
         
         var orders: [CustomerOrder] = [] {
-            didSet {
-                filter = ""
-            }
+            didSet { filter = "" }
         }
+        // Will allow the list to be searched by either the order number or the first and last name of the customer
         var filter: String   = "" {
             didSet {
                 matchingOrder = orders.filter { order in
@@ -228,16 +227,16 @@ extension OrderView {
             }
         }
         
+        // Changes the dates to all be UTC to accurately compare them
         private var utcCalendar: Calendar {
             var calendar = Calendar(identifier: .gregorian)
             calendar.timeZone = TimeZone(secondsFromGMT: 0)!
             return calendar
         }
         
-        var grandTotal: Double {
-            ordersByDate.reduce(0) { $0 + $1.total }
-        }
+        var grandTotal: Double { ordersByDate.reduce(0) { $0 + $1.total }}
         
+        // Loads all the orders from the repository
         func loadOrders() async {
             do    { orders = try await repository.getAll() }
             catch { errorMessage = "\(error)" }

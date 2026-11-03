@@ -58,6 +58,7 @@ struct EmployeeList: View {
             .refreshable {
                 await viewModel.loader.load(userInitiated: true)
             }
+            .searchable(text: $viewModel.filter)
         }
     }
     
@@ -171,6 +172,7 @@ extension EmployeeList {
             }
         }
         
+        // Groups the Employess by Department
         var groupedEmployees: [(title: String, employees: [Employee])] {
             Dictionary(grouping: matchingEmployee) { $0.department ?? "Unspecified" }
                 .map { (title: $0.key, employees: sortedList($0.value)) }
