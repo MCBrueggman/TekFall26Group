@@ -8,15 +8,21 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var current: String = "inventory"
-    @Environment(\.inventoryRepository) private var inventoryRepository
     @EnvironmentObject var authStatus: AuthStatus
+    
+    private var inventoryRepo: RemoteInventoryRepo {
+        RemoteInventoryRepo(
+            urlBase: "https://api.bootcampcentral.com/api",
+            authStatus: authStatus
+        )
+    }
     
     var body: some View {
         NavigationStack {
             VStack {
                 switch current {
                 case "inventory":
-                    InventoryAwarenessView(repository: inventoryRepository)
+                    InventoryAwarenessView(repository: inventoryRepo)
                 default:
                     HomeView()
                 }

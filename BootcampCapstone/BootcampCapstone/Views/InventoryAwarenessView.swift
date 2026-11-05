@@ -1,7 +1,6 @@
 //
 //  InventoryAwarenessView.swift
 //  BootcampCapstone
-//
 //  Created by user301537 on 10/23/26.
 //
 
@@ -10,7 +9,7 @@ import SwiftUI
 struct InventoryAwarenessView: View {
     @State private var viewModel: ViewModel
     
-    init(repository: any RepositoryProtocol<InventoryItem>) {
+    init(repository: RemoteInventoryRepo) {
         _viewModel = State(initialValue: ViewModel(repository: repository))
     }
     
@@ -63,13 +62,12 @@ struct InventoryAwarenessView: View {
                         
                         Divider()
                         
-                        // Consolidated product, location, shelf/bin, and threshold details
                         ViewThatFits(in: .horizontal) {
                             HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Location: \(item.locationName)")
                                         .font(.subheadline)
-                                    Text("Shelf: \(item.shelf)  •  Bin: \(item.bin)")
+                                    Text("Shelf: \(item.shelf)     Bin: \(item.bin)")
                                         .font(.caption)
                                         .foregroundStyle(.secondary)
                                 }
@@ -90,7 +88,7 @@ struct InventoryAwarenessView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Location: \(item.locationName)")
                                     .font(.subheadline)
-                                Text("Shelf: \(item.shelf)  •  Bin: \(item.bin)")
+                                Text("Shelf: \(item.shelf)     Bin: \(item.bin)")
                                     .font(.caption)
                                     .foregroundStyle(.secondary)
                                 Text("Qty: \(item.quantity) (Threshold: \(item.reorderPoint))")
@@ -116,10 +114,10 @@ struct InventoryAwarenessView: View {
 
 extension InventoryAwarenessView {
     @Observable
-    class ViewModel: Failable {
-        let repository: any RepositoryProtocol<InventoryItem>
+    class ViewModel {
+        let repository: RemoteInventoryRepo
         
-        init(repository: any RepositoryProtocol<InventoryItem>) {
+        init(repository: RemoteInventoryRepo) {
             self.repository = repository
         }
         
