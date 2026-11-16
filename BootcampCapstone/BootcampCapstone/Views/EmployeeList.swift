@@ -98,7 +98,15 @@ struct EmployeeList: View {
                     }
                 }
                 .navigationDestination(for: Employee.self) { employee in
-                    EmployeeDetailView(employee: employee, repository: viewModel.repository)
+                    EmployeeDetailView(
+                        employee: employee,
+                        repository: viewModel.repository,
+                        onUpdate: { _ in
+                            Task {
+                                await viewModel.loader.load(userInitiated: true)
+                            }
+                        }
+                    )
                 }
         }
         .task {
