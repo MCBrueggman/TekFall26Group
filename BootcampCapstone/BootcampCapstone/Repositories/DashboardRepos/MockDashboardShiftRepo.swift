@@ -1,0 +1,9 @@
+//
+//  MockDashboardShiftRepo.swift
+//  BootcampCapstone
+//
+//  Created by user301407 on 10/9/26.
+//
+
+
+import Foundationclass MockDashboardShiftRepo: RepositoryProtocol<DasboardShift> {        func getAll() async throws -> [DasboardShift] {        return [            DasboardShift(                id: 1,                firstName: "John",                middleName: "",                lastName: "Smith",                suffix: "",                shift: "Morning"            ),            DasboardShift(                id: 2,                firstName: "Jane",                middleName: "",                lastName: "Doe",                suffix: "",                shift: "Evening"            ),            DasboardShift(                id: 3,                firstName: "Mike",                middleName: "",                lastName: "Jones",                suffix: "",                shift: "Night"            ),            DasboardShift(                id: 4,                firstName: "Sarah",                middleName: "",                lastName: "Brown",                suffix: "",                shift: "Morning"            )        ]    }        func getById(_ id: Int) async throws -> DasboardShift? {        return nil    }        func insert(_ item: DasboardShift) async throws -> DasboardShift {        throw URLError(.unsupportedURL)    }        func update(_ item: DasboardShift) async throws {        throw URLError(.unsupportedURL)    }        func delete(_ item: DasboardShift) async throws {        throw URLError(.unsupportedURL)    }}
