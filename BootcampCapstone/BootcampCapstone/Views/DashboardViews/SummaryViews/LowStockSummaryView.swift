@@ -15,12 +15,19 @@ struct LowStockSummaryView: View {
     }
     
     var body: some View {
-        VStack{
-            ForEach(viewModel.urgentProducts) { product in
-                HStack {
-                    Text(product.productName)
-                    Spacer()
-                    Text("\(product.stockLevel) left")
+        VStack {
+            if !viewModel.errorMessage.isEmpty {
+                Text("Unable to load data. Check your internet connection.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            } else {
+                ForEach(viewModel.urgentProducts) { product in
+                    HStack {
+                        Text(product.productName)
+                        Spacer()
+                        Text("\(product.stockLevel) left")
+                    }
                 }
             }
         }
@@ -48,8 +55,8 @@ extension LowStockSummaryView {
         func loadLowStock() async {
             do {
                 lowStock = try await repository.getAll()
-            }
-            catch {
+                errorMessage = ""
+            } catch {
                 errorMessage = "\(error)"
             }
         }

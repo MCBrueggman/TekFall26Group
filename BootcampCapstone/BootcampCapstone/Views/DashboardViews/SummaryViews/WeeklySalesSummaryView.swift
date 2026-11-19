@@ -15,16 +15,22 @@ struct WeeklySalesSummaryView: View {
     }
     
     var body: some View {
-        VStack{
-            if let week = viewModel.latestWeek {
-                            Text("$\(week.totalSales, specifier: "%.2f")")
-                                .font(.title2)
-                                .bold()
-                            
-                            Text("Profit: $\(week.totalProfit, specifier: "%.2f")")
-                                .font(.subheadline)
-                        }
-        }.task{
+        VStack {
+            if !viewModel.errorMessage.isEmpty {
+                Text("Unable to load data. Check your internet connection.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            } else if let week = viewModel.latestWeek {
+                Text("$\(week.totalSales, specifier: "%.2f")")
+                    .font(.title2)
+                    .bold()
+
+                Text("Profit: $\(week.totalProfit, specifier: "%.2f")")
+                    .font(.subheadline)
+            }
+        }
+        .task {
             await viewModel.loadWeeklySales()
         }
     }
@@ -43,8 +49,8 @@ extension WeeklySalesSummaryView {
         func loadWeeklySales() async {
             do {
                 weeklySales = try await repository.getAll()
-            }
-            catch {
+                errorMessage = ""
+            } catch {
                 errorMessage = "\(error)"
             }
         }

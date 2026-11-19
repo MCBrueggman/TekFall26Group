@@ -29,25 +29,51 @@ struct DashboardShiftDetailsView: View {
             Text("Employee Shifts")
                 .font(.largeTitle)
                 .bold()
-            
-            Picker("Shift", selection: $viewModel.shiftFilter) {
-                ForEach(SortingShifts.allCases) { option in
-                    Text(option.rawValue).tag(option)
-                }
-            }
-            
-            .pickerStyle(.segmented)
-            .padding(.horizontal)
-            
-            List(viewModel.filteredShifts) { employee in
-                VStack(alignment: .leading) {
-                    Text("\(employee.firstName) \(employee.lastName)")
+
+            if !viewModel.errorMessage.isEmpty {
+                Spacer()
+
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+
+                    Text("Failed to load.")
                         .font(.headline)
-                    
-                    Text("Shift: \(employee.shift)")
+
+                    Text("The Internet connection appears to be offline.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button("Try again") {
+                        Task {
+                            await viewModel.loadShifts()
+                        }
+                    }
                 }
+                .padding()
+
+                Spacer()
+            } else {
+                Picker("Shift", selection: $viewModel.shiftFilter) {
+                    ForEach(SortingShifts.allCases) { option in
+                        Text(option.rawValue).tag(option)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .padding(.horizontal)
+
+                List(viewModel.filteredShifts) { employee in
+                    VStack(alignment: .leading) {
+                        Text("\(employee.firstName) \(employee.lastName)")
+                            .font(.headline)
+
+                        Text("Shift: \(employee.shift)")
+                    }
+                }
+                .animation(.default, value: viewModel.shiftFilter)
             }
-            .animation(.default, value: viewModel.shiftFilter)
         }
         .task {
             print("TaskStarted")
@@ -78,6 +104,7 @@ extension DashboardShiftDetailsView {
         func loadShifts() async {
             do {
                 shifts = try await repository.getAll()
+                errorMessage = ""
             } catch {
                 errorMessage = "\(error)"
                 print("shift error: \(error)")
