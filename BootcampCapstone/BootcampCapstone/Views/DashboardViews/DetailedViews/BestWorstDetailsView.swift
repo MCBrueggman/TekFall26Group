@@ -17,23 +17,51 @@ struct BestWorstDetailsView: View {
     
     var body: some View {
         VStack {
-                Text("Best-Worst Products")
-                    .font(.largeTitle)
-                    .bold()
-                    
+            Text("Best-Worst Products")
+                .font(.largeTitle)
+                .bold()
+
+            if !viewModel.errorMessage.isEmpty {
+                Spacer()
+
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+
+                    Text("Failed to load.")
+                        .font(.headline)
+
+                    Text("The Internet connection appears to be offline.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button("Try again") {
+                        Task {
+                            await viewModel.loadProducts()
+                        }
+                    }
+                }
+                .padding()
+
+                Spacer()
+
+            } else {
                 List(viewModel.bestWorst) { product in
                     VStack(alignment: .leading) {
                         Text(product.productName)
                             .font(.headline)
+
                         Text("Units Sold: \(product.unitsSold)")
                         Text("Units In Stock: \(product.unitsInStock)")
                     }
                 }
             }
-            .task {
-                    await viewModel.loadProducts()
-            }
-            
+        }
+        .task {
+            await viewModel.loadProducts()
+        }
     }
 }
 
@@ -53,8 +81,8 @@ extension BestWorstDetailsView {
         func loadProducts() async {
             do {
                 bestWorst = try await repository.getAll()
-                }
-            catch {
+                errorMessage = ""
+            } catch {
                 errorMessage = "\(error)"
             }
         }

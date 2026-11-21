@@ -15,7 +15,13 @@ struct BestWorstSummaryView: View {
     }
     
     var body: some View {
-        VStack{
+        VStack {
+            if !viewModel.errorMessage.isEmpty {
+                Text("Unable to load data. Check your internet connection.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            } else {
                 if let best = viewModel.bestProduct {
                     Text("Best: \(best.productName)")
                         .font(.title2)
@@ -24,6 +30,7 @@ struct BestWorstSummaryView: View {
                     Text("\(best.unitsSold) sold")
                         .font(.subheadline)
                 }
+
                 if let worst = viewModel.worstProduct {
                     Text("Worst: \(worst.productName)")
                         .font(.title2)
@@ -32,7 +39,9 @@ struct BestWorstSummaryView: View {
                     Text("\(worst.unitsSold) sold")
                         .font(.subheadline)
                 }
-        }.task{
+            }
+        }
+        .task {
             await viewModel.loadProducts()
         }
     }
@@ -55,8 +64,8 @@ extension BestWorstSummaryView {
         func loadProducts() async {
             do {
                 bestWorst = try await repository.getAll()
-            }
-            catch {
+                errorMessage = ""
+            } catch {
                 errorMessage = "\(error)"
             }
         }

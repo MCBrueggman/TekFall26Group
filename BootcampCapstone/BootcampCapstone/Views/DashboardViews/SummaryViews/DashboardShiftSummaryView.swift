@@ -15,13 +15,20 @@ struct DashboardShiftSummaryView: View {
     
     var body: some View {
         VStack {
-            ForEach(viewModel.summaryShifts) { employee in
-                HStack {
-                    Text("\(employee.firstName) \(employee.lastName)")
-                    
-                    Spacer()
-                    
-                    Text(employee.shift)
+            if !viewModel.errorMessage.isEmpty {
+                Text("Unable to load data. Check your internet connection.")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .multilineTextAlignment(.center)
+            } else {
+                ForEach(viewModel.summaryShifts) { employee in
+                    HStack {
+                        Text("\(employee.firstName) \(employee.lastName)")
+
+                        Spacer()
+
+                        Text(employee.shift)
+                    }
                 }
             }
         }
@@ -45,6 +52,7 @@ extension DashboardShiftSummaryView {
         func loadShifts() async {
             do {
                 shifts = try await repository.getAll()
+                errorMessage = ""
             } catch {
                 errorMessage = "\(error)"
             }

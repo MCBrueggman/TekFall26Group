@@ -19,15 +19,43 @@ struct WeeklySalesDetailsView: View {
             Text("Weekly Sales")
                 .font(.largeTitle)
                 .bold()
-            
-            List(viewModel.weeklySales) { week in
-                VStack(alignment: .leading) {
-                    Text(week.salesDate.formatted(date: .abbreviated, time: .omitted))
+
+            if !viewModel.errorMessage.isEmpty {
+                Spacer()
+
+                VStack(spacing: 12) {
+                    Image(systemName: "exclamationmark.circle")
+                        .font(.system(size: 40))
+                        .foregroundStyle(.secondary)
+
+                    Text("Failed to load.")
                         .font(.headline)
-                    
-                    Text("Sales: $\(week.totalSales, specifier: "%.2f")")
-                    
-                    Text("Profit: $\(week.totalProfit, specifier: "%.2f")")
+
+                    Text("The Internet connection appears to be offline.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+
+                    Button("Try again") {
+                        Task {
+                            await viewModel.loadWeeklySales()
+                        }
+                    }
+                }
+                .padding()
+
+                Spacer()
+
+            } else {
+                List(viewModel.weeklySales) { week in
+                    VStack(alignment: .leading) {
+                        Text(week.salesDate.formatted(date: .abbreviated, time: .omitted))
+                            .font(.headline)
+
+                        Text("Sales: $\(week.totalSales, specifier: "%.2f")")
+
+                        Text("Profit: $\(week.totalProfit, specifier: "%.2f")")
+                    }
                 }
             }
         }
@@ -53,6 +81,7 @@ extension WeeklySalesDetailsView {
         func loadWeeklySales() async {
             do {
                 weeklySales = try await repository.getAll()
+                errorMessage = ""
             }
             catch {
                 errorMessage = "\(error)"
