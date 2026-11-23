@@ -22,22 +22,48 @@ struct BestWorstSummaryView: View {
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
             } else {
-                if let best = viewModel.bestProduct {
-                    Text("Best: \(best.productName)")
-                        .font(.title2)
-                        .bold()
-
-                    Text("\(best.unitsSold) sold")
-                        .font(.subheadline)
-                }
-
-                if let worst = viewModel.worstProduct {
-                    Text("Worst: \(worst.productName)")
-                        .font(.title2)
-                        .bold()
-
-                    Text("\(worst.unitsSold) sold")
-                        .font(.subheadline)
+                VStack(alignment: .leading, spacing: 10) {
+                    if let best = viewModel.bestProduct {
+                        HStack(alignment: .center) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Best Selling")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                
+                                Text(best.productName)
+                                    .font(.subheadline)
+                                    .lineLimit(1)
+                            }
+                            
+                            Spacer()
+                            
+                            Text("\(best.unitsSold) sold")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize()
+                        }
+                    }
+                    
+                    if let worst = viewModel.worstProduct {
+                        HStack(alignment: .center) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Worst Selling")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                
+                                Text(worst.productName)
+                                    .font(.subheadline)
+                                    .lineLimit(1)
+                            }
+                            
+                            Spacer()
+                            
+                            Text("\(worst.unitsSold) sold")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .fixedSize()
+                        }
+                    }
                 }
             }
         }
